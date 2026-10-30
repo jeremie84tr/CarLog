@@ -28,7 +28,7 @@ extension NSManagedObjectContext {
 }
 
 extension Part {
-    convenience init(duplicating: Part, context: NSManagedObjectContext = PersistenceController.unowned.container.viewContext) {
+    convenience init(duplicating: Part, context: NSManagedObjectContext) {
         self.init(context: context)
         self.name = duplicating.name
         self.price = duplicating.price
@@ -45,7 +45,7 @@ extension Part {
 }
 
 extension Repair {
-    convenience init(duplicating: Repair, context: NSManagedObjectContext = PersistenceController.unowned.container.viewContext) {
+    convenience init(duplicating: Repair, context: NSManagedObjectContext) {
         self.init(context: context)
         if let parts = duplicating.parts?.allObjects as? [Part] {
             for part in parts {
@@ -57,7 +57,7 @@ extension Repair {
 }
 
 extension Fuel {
-    convenience init(duplicating: Fuel, context: NSManagedObjectContext = PersistenceController.unowned.container.viewContext) {
+    convenience init(duplicating: Fuel, context: NSManagedObjectContext) {
         self.init(context: context)
         self.full = duplicating.full
         self.price = duplicating.price
@@ -66,8 +66,9 @@ extension Fuel {
 }
 
 extension Action {
-    convenience init(duplicating: Action, context: NSManagedObjectContext = PersistenceController.unowned.container.viewContext) {
+    convenience init(duplicating: Action, context: NSManagedObjectContext) {
         self.init(context: context)
+        self.mileage = duplicating.mileage
         self.location = duplicating.location
         self.reason = duplicating.reason
         self.timestamp = duplicating.timestamp

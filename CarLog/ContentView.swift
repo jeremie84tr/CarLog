@@ -8,8 +8,6 @@
 import SwiftUI
 import Charts
 import CoreData
-import UniformTypeIdentifiers
-import Compression
 import ZIPFoundation
 
 struct ContentView: View {

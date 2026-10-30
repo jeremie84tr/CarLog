@@ -11,15 +11,6 @@ import OSLog
 struct PersistenceController {
     static let shared = PersistenceController()
     
-    static let unowned: PersistenceController = {
-        let result = PersistenceController(inMemory: true)
-        let viewContext = result.container.viewContext
-        do {
-            try? viewContext.save()
-        }
-        return result
-    }()
-
     @MainActor
     static let preview: PersistenceController = {
         let result = PersistenceController(inMemory: true)
