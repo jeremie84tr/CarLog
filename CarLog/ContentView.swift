@@ -30,10 +30,7 @@ struct ContentView: View {
             }
             
             // Prix dépensé
-            ForEach(actions.sorted(by: {$0.timestamp < $1.timestamp}).reduce(into: [(date: Date, accumulatedValue: Double)](), { partialResult, added in
-                let last = partialResult.last?.accumulatedValue ?? 0
-                partialResult.append((date: added.timestamp, accumulatedValue: last + added.price))
-            }), id:\.date) { element in
+            ForEach(actions.cumulativeExpenses) { element in
                 LineMark(
                     x: .value("Date", element.date),
                     y: .value("Valeur", element.accumulatedValue)
@@ -41,12 +38,9 @@ struct ContentView: View {
                 .interpolationMethod(.catmullRom)
                 .foregroundStyle(by: .value("Accumulated", "€ cumulés"))
             }
-            
+
             // Prix dépensé carburant
-            ForEach(actions.filter{$0.fuel != nil}.sorted(by: {$0.timestamp < $1.timestamp}).reduce(into: [(date: Date, accumulatedValue: Double)](), { partialResult, added in
-                let last = partialResult.last?.accumulatedValue ?? 0
-                partialResult.append((date: added.timestamp, accumulatedValue: last + added.price))
-            }), id:\.date) { element in
+            ForEach(actions.filter{$0.fuel != nil}.cumulativeExpenses) { element in
                 LineMark(
                     x: .value("Date", element.date),
                     y: .value("Valeur", element.accumulatedValue)
@@ -54,12 +48,9 @@ struct ContentView: View {
                 .interpolationMethod(.catmullRom)
                 .foregroundStyle(by: .value("Accumulated Fuel", "€ carburant"))
             }
-            
-            // Prix dépensé
-            ForEach(actions.filter{$0.repair != nil}.sorted(by: {$0.timestamp < $1.timestamp}).reduce(into: [(date: Date, accumulatedValue: Double)](), { partialResult, added in
-                let last = partialResult.last?.accumulatedValue ?? 0
-                partialResult.append((date: added.timestamp, accumulatedValue: last + added.price))
-            }), id:\.date) { element in
+
+            // Prix dépensé réparations
+            ForEach(actions.filter{$0.repair != nil}.cumulativeExpenses) { element in
                 LineMark(
                     x: .value("Date", element.date),
                     y: .value("Valeur", element.accumulatedValue)
@@ -72,6 +63,7 @@ struct ContentView: View {
     }
     
     var body: some View {
+        let consumptions = actions.fuelConsumptions
         NavigationView {
             List {
                 Section("Graphiques") {
@@ -132,11 +124,11 @@ struct ContentView: View {
                                 Section("Consommation") {
                                     Chart {
                                         // Consommation L/100km
-                                        ForEach(fuelActions, id: \.date) { item in
-                                            if let fuel = item.value.fuelConsumption(viewContext) {
+                                        ForEach(Array(actions.filter { consumptions[$0.objectID] != nil }.enumerated()), id: \.offset) { _, action in
+                                            if let consumption = consumptions[action.objectID] {
                                                 LineMark(
-                                                    x: .value("Date", item.date),
-                                                    y: .value("Valeur", fuel)
+                                                    x: .value("Date", action.timestamp),
+                                                    y: .value("Valeur", consumption)
                                                 )
                                                 .interpolationMethod(.catmullRom)
                                                 .foregroundStyle(by: .value("Série", "Conso L/100km"))
@@ -221,7 +213,7 @@ struct ContentView: View {
                                                 Text(str)
                                             }
                                             HStack {
-                                                if let conso = fuel.fuelConsumption(viewContext) {
+                                                if let conso = consumptions[action.objectID] {
                                                     Text("\(conso) L/100Km")
                                                     Spacer()
                                                 }
@@ -520,7 +512,47 @@ struct ContentView: View {
     }
 }
 
+struct CumulativeExpense: Identifiable {
+    let id: Int
+    let date: Date
+    let accumulatedValue: Double
+}
+
 extension Collection where Element == Action {
+    /// Dépenses cumulées par ordre chronologique.
+    var cumulativeExpenses: [CumulativeExpense] {
+        var total = 0.0
+        return sorted(by: { $0.timestamp < $1.timestamp }).enumerated().map { index, action in
+            total += action.price
+            return CumulativeExpense(id: index, date: action.timestamp, accumulatedValue: total)
+        }
+    }
+
+    /// Consommation L/100km de chaque plein complet, calculée en un seul passage
+    /// (méthode « plein à plein »). Clé : objectID de l'Action.
+    var fuelConsumptions: [NSManagedObjectID: Double] {
+        var result = [NSManagedObjectID: Double]()
+        var litersSinceLastFull = 0.0
+        var lastFullMileage: Int64?
+        let fuelActions = filter { $0.fuel != nil }.sorted(by: { $0.timestamp < $1.timestamp })
+        for action in fuelActions {
+            guard let fuel = action.fuel else { continue }
+            if fuel.full {
+                if let lastFullMileage {
+                    let mileageDiff = Double(action.mileage - lastFullMileage)
+                    if mileageDiff > 0 {
+                        result[action.objectID] = (litersSinceLastFull + fuel.quantity) * 100.0 / mileageDiff
+                    }
+                }
+                lastFullMileage = action.mileage
+                litersSinceLastFull = 0
+            } else {
+                litersSinceLastFull += fuel.quantity
+            }
+        }
+        return result
+    }
+
     var totalExpenses: Double {
         self.reduce(0.0) { partialResult, element in
             if let fuel = element.fuel {

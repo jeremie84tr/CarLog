@@ -21,8 +21,8 @@ struct PartView: View {
     }
 }
 
-var moneyFormatter: NumberFormatter {
+let moneyFormatter: NumberFormatter = {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currencyPlural
     return formatter
-}
+}()

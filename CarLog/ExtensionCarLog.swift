@@ -63,35 +63,6 @@ extension Fuel {
         self.price = duplicating.price
         self.quantity = duplicating.quantity
     }
-    func fuelConsumption(_ viewContext: NSManagedObjectContext) -> Double? {
-        guard let entityName = Action.entity().name, let action = action, full == true else { return nil }
-        
-        let fetchRequest = NSFetchRequest<Action>(entityName: entityName)
-        fetchRequest.predicate = NSPredicate(format: "timestamp_ < %@ AND fuel != nil", action.timestamp as NSDate)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Action.timestamp_, ascending: false)]
-        
-        do {
-            let previousActions = try viewContext.fetch(fetchRequest)
-            
-            if let lastFullIndex = previousActions.firstIndex(where: { $0.fuel?.full == true }) {
-                let range = previousActions.prefix(upTo: lastFullIndex)
-                let fuelConsumed = range.reduce(quantity) { result, action in
-                    result + (action.fuel?.quantity ?? 0.0)
-                }
-                
-                let mileageDiff = Double(action.mileage - previousActions[lastFullIndex].mileage)
-                guard mileageDiff > 0 else { return nil }
-                
-//                print("\(fuelConsumed) litres consommés sur \(mileageDiff) km entre \(previousActions[lastFullIndex].timestamp) et \(action.timestamp)")
-                return (fuelConsumed * 100.0) / mileageDiff
-            }
-            
-        } catch {
-            print("Erreur lors du fetch pour consommation : \(error)")
-        }
-        
-        return nil
-    }
 }
 
 extension Action {
