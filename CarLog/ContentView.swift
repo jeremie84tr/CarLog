@@ -15,6 +15,8 @@ import ZIPFoundation
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
+    @State private var exportErrorMessage: String?
+
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Action.timestamp_, ascending: false)],
         animation: .default)
@@ -265,6 +267,40 @@ struct ContentView: View {
             }
             Text("Sélectionnez une action")
         }
+        .alert("Export impossible",
+               isPresented: Binding(get: { exportErrorMessage != nil },
+                                    set: { if !$0 { exportErrorMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportErrorMessage ?? "")
+        }
+    }
+
+    private func reportExportFailure(_ message: String) {
+        exportErrorMessage = message
+    }
+
+    /// Présente la feuille de partage (avec ancrage popover pour iPad) et supprime les fichiers temporaires ensuite.
+    private func presentShareSheet(for url: URL, cleaning cleanup: [URL]) {
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activityVC.completionWithItemsHandler = { _, _, _, _ in
+            cleanup.forEach { try? FileManager.default.removeItem(at: $0) }
+        }
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let root = scene.keyWindow?.rootViewController else {
+            cleanup.forEach { try? FileManager.default.removeItem(at: $0) }
+            reportExportFailure("Impossible d'afficher la feuille de partage.")
+            return
+        }
+        // Remonte au contrôleur actuellement présenté pour éviter un conflit de présentation.
+        var presenter = root
+        while let presented = presenter.presentedViewController { presenter = presented }
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = presenter.view
+            popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.maxY - 1, width: 1, height: 1)
+            popover.permittedArrowDirections = []
+        }
+        presenter.present(activityVC, animated: true)
     }
     
     private func shareAllZip() {
@@ -273,14 +309,20 @@ struct ContentView: View {
         do {
             try FileManager.default.createDirectory(at: exportFolder, withIntermediateDirectories: true)
         } catch {
+            reportExportFailure("Impossible de créer le dossier temporaire : \(error.localizedDescription)")
             return
         }
+        defer { try? FileManager.default.removeItem(at: exportFolder) }
         
         // 2) Helpers
         func csvEscaped(_ value: String) -> String {
             // Échappe les guillemets et force l’encapsulation si nécessaire
             var needsQuotes = false
             var v = value
+            // Évite l'injection de formule à l'ouverture dans un tableur.
+            if let first = v.first, "=+-@".contains(first) {
+                v = "'" + v
+            }
             if v.contains("\"") {
                 v = v.replacingOccurrences(of: "\"", with: "\"\"")
                 needsQuotes = true
@@ -299,9 +341,17 @@ struct ContentView: View {
                 return nil
             }
         }
+        // Identifiants d'export séquentiels, cohérents entre les CSV (les objectID Core Data ne sont pas portables).
+        var exportIDs = [NSManagedObjectID: String]()
+        var counters = [String: Int]()
         func idString(for object: NSManagedObject?) -> String {
             guard let object else { return "" }
-            return object.objectID.uriRepresentation().absoluteString
+            if let existing = exportIDs[object.objectID] { return existing }
+            let prefix = object.entity.name?.lowercased() ?? "object"
+            counters[prefix, default: 0] += 1
+            let id = "\(prefix)-\(counters[prefix]!)"
+            exportIDs[object.objectID] = id
+            return id
         }
         
         // 3) Construire CSVs
@@ -378,6 +428,7 @@ struct ContentView: View {
         encoder.dateEncodingStrategy = .iso8601
         guard let indexData = try? encoder.encode(index),
               let indexString = String(data: indexData, encoding: .utf8) else {
+            reportExportFailure("Impossible de générer index.json.")
             return
         }
         
@@ -387,12 +438,14 @@ struct ContentView: View {
               writeFile(named: "repairs.csv", contents: repairsCSV) != nil,
               writeFile(named: "parts.csv", contents: partsCSV) != nil,
               writeFile(named: "index.json", contents: indexString) != nil else {
+            reportExportFailure("Impossible d'écrire les fichiers CSV.")
             return
         }
         
         // 6) Créer ZIP
         let zipURL = FileManager.default.temporaryDirectory.appendingPathComponent("CarLog_Export_\(ISO8601DateFormatter().string(from: .now)).zip")
         guard let archive = Archive(url: zipURL, accessMode: .create) else {
+            reportExportFailure("Impossible de créer l'archive ZIP.")
             return
         }
         do {
@@ -402,15 +455,13 @@ struct ContentView: View {
                 try archive.addEntry(with: name, fileURL: fileURL, compressionMethod: .deflate)
             }
         } catch {
+            try? FileManager.default.removeItem(at: zipURL)
+            reportExportFailure("Impossible de remplir l'archive ZIP : \(error.localizedDescription)")
             return
         }
         
         // 7) Partager
-        let activityVC = UIActivityViewController(activityItems: [zipURL], applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.keyWindow?.rootViewController {
-            root.present(activityVC, animated: true)
-        }
+        presentShareSheet(for: zipURL, cleaning: [zipURL])
     }
     
     private func shareActionJSON() {
@@ -478,6 +529,7 @@ struct ContentView: View {
         encoder.dateEncodingStrategy = .iso8601
         
         guard let data = try? encoder.encode(export) else {
+            reportExportFailure("Impossible d'encoder les données en JSON.")
             return
         }
         
@@ -487,16 +539,12 @@ struct ContentView: View {
         do {
             try data.write(to: url, options: .atomic)
         } catch {
+            reportExportFailure("Impossible d'écrire le fichier JSON : \(error.localizedDescription)")
             return
         }
         
-        // 5) Partager via ShareLink (iOS 16+)
-        // On utilise une UIActivityViewController via UIApplication pour compat max si besoin.
-        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.keyWindow?.rootViewController {
-            root.present(activityVC, animated: true)
-        }
+        // 5) Partager
+        presentShareSheet(for: url, cleaning: [url])
     }
 
     private func addAction() {
