@@ -507,12 +507,7 @@ struct ContentView: View {
             newAction.timestamp = Date()
             newAction.mileage = actions.max(by: {$0.mileage < $1.mileage})?.mileage ?? 0
 
-            do {
-                try viewContext.save()
-            } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+            viewContext.saveLoggingErrors()
         }
     }
 
@@ -520,12 +515,7 @@ struct ContentView: View {
         withAnimation {
             offsets.map { actions[$0] }.forEach(viewContext.delete)
 
-            do {
-                try viewContext.save()
-            } catch {
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+            viewContext.saveLoggingErrors()
         }
     }
 }

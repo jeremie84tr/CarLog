@@ -7,6 +7,25 @@
 
 import Foundation
 import CoreData
+import OSLog
+
+private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "CarLog", category: "CoreData")
+
+extension NSManagedObjectContext {
+    /// Sauvegarde le contexte s'il a des changements ; journalise l'erreur au lieu de planter.
+    @discardableResult
+    func saveLoggingErrors() -> Bool {
+        guard hasChanges else { return true }
+        do {
+            try save()
+            return true
+        } catch {
+            let nsError = error as NSError
+            logger.error("Échec de la sauvegarde : \(nsError), \(nsError.userInfo)")
+            return false
+        }
+    }
+}
 
 extension Part {
     convenience init(duplicating: Part, context: NSManagedObjectContext = PersistenceController.unowned.container.viewContext) {

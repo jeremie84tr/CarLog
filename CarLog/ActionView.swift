@@ -113,7 +113,7 @@ struct ActionView: View {
                 action.fuel.map(viewContext.delete)
                 action.fuel = nil
             }
-            try? viewContext.save()
+            viewContext.saveLoggingErrors()
         }
     }
     
@@ -122,14 +122,7 @@ struct ActionView: View {
             let newPart = Part(context: viewContext)
             action.repair?.addToParts(newPart)
 
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+            viewContext.saveLoggingErrors()
         }
     }
 }
