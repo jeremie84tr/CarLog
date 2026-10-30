@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CarLog.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>80D269B83B53DB753B061B68CD0473803A438AC9</string>
+				<key>dateExpires</key>
+				<string>15/11/2026</string>
+				<key>type</key>
+				<string>Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>XK27PY3L36.student.CarLog</string>
+				<key>aps-environment</key>
+				<string>production</string>
+				<key>com.apple.developer.icloud-container-identifiers</key>
+				<array/>
+				<key>com.apple.developer.icloud-services</key>
+				<array>
+					<string>CloudKit</string>
+				</array>
+				<key>com.apple.developer.team-identifier</key>
+				<string>XK27PY3L36</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>CarLog.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>244fe77b-0c8f-4231-ae75-735e1a038eb1</string>
+				<key>dateExpires</key>
+				<string>15/11/2026</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: student.CarLog</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>XK27PY3L36</string>
+				<key>name</key>
+				<string>JEREMIE, BENJAMIN LOHYER</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>
