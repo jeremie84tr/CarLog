@@ -20,13 +20,3 @@ struct PartView: View {
         }
     }
 }
-
-/// Devise unique de l'app, partagée par les champs de saisie et l'affichage.
-let appCurrencyCode = "EUR"
-
-let moneyFormatter: NumberFormatter = {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.currencyCode = appCurrencyCode
-    return formatter
-}()
