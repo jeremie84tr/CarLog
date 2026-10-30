@@ -17,18 +17,25 @@ struct RepairView: View {
         Section("Réparation") {
             TextField("Forfait facturé", value: $repair.price, format: .currency(code: "EUR"))
             
-            if let parts = repair.parts?.allObjects as? [Part] {
-                ForEach(parts) { part in
-                    PartView(part: part)
-                }
-                .onDelete(perform: deleteParts)
+            ForEach(sortedParts) { part in
+                PartView(part: part)
             }
+            .onDelete(perform: deleteParts)
+        }
+    }
+
+    /// Même ordre pour l'affichage et la suppression (l'ordre d'un NSSet n'est pas garanti).
+    /// Tri sur l'identifiant, stable pendant la saisie (contrairement à un tri par nom).
+    private var sortedParts: [Part] {
+        ((repair.parts?.allObjects as? [Part]) ?? []).sorted {
+            $0.objectID.uriRepresentation().absoluteString < $1.objectID.uriRepresentation().absoluteString
         }
     }
 
     private func deleteParts(offsets: IndexSet) {
         withAnimation {
-            offsets.compactMap { (repair.parts?.allObjects as? [Part])?[$0] ?? nil }.forEach(viewContext.delete)
+            let parts = sortedParts
+            offsets.map { parts[$0] }.forEach(viewContext.delete)
 
             viewContext.saveLoggingErrors()
         }

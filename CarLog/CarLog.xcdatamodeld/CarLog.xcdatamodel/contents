@@ -5,8 +5,8 @@
         <attribute name="mileage" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="reason_" optional="YES" attributeType="String"/>
         <attribute name="timestamp_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="fuel" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Fuel" inverseName="action" inverseEntity="Fuel"/>
-        <relationship name="repair" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Repair" inverseName="action" inverseEntity="Repair"/>
+        <relationship name="fuel" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Fuel" inverseName="action" inverseEntity="Fuel"/>
+        <relationship name="repair" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Repair" inverseName="action" inverseEntity="Repair"/>
     </entity>
     <entity name="Fuel" representedClassName="Fuel" syncable="YES" codeGenerationType="class">
         <attribute name="full" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -17,11 +17,11 @@
     <entity name="Part" representedClassName="Part" syncable="YES" codeGenerationType="class">
         <attribute name="name_" optional="YES" attributeType="String"/>
         <attribute name="price" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <relationship name="repair" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Repair" inverseName="parts" inverseEntity="Repair"/>
+        <relationship name="repair" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="Repair" inverseName="parts" inverseEntity="Repair"/>
     </entity>
     <entity name="Repair" representedClassName="Repair" syncable="YES" codeGenerationType="class">
         <attribute name="price" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <relationship name="action" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Action" inverseName="repair" inverseEntity="Action"/>
-        <relationship name="parts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Part" inverseName="repair" inverseEntity="Part"/>
+        <relationship name="parts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Part" inverseName="repair" inverseEntity="Part"/>
     </entity>
 </model>
