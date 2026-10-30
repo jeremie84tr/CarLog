@@ -1,0 +1,57 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcscmblueprint
+timeline.xctimeline
+*.perspectivev3
+*.pbxuser
+*.mode1v3
+*.mode2v3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+
+# Xcode Archive / export (ex: "CarLog 2025-11-15 14-10-54/")
+CarLog 20*/
+*.xcarchive
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.pins
+# Package.resolved est versionné volontairement (versions reproductibles)
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Secrets / config locale
+*.xcconfig.local
+.env
+
+# Claude Code (réglages locaux)
+.claude/settings.local.json
