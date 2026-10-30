@@ -96,10 +96,10 @@ struct ContentView: View {
                                         
                                         // Prix carburant
                                         ForEach(actions.compactMap{$0.fuel}) { fuel in
-                                            if let action = fuel.action {
+                                            if let action = fuel.action, let eurosPerLiter = fuel.eurosPerLiter {
                                                 LineMark(
                                                     x: .value("Date", action.timestamp),
-                                                    y: .value("Valeur", fuel.eurosPerLiter)
+                                                    y: .value("Valeur", eurosPerLiter)
                                                 )
                                                 .interpolationMethod(.catmullRom)
                                                 .foregroundStyle(by: .value("Série", "€/L"))
@@ -142,7 +142,11 @@ struct ContentView: View {
                                         Text("\(consumedFuel)L")
                                     }
                                     LabeledContent("Consommation moyenne globale") {
-                                        Text("\(consumedFuel / (Double(distanceRan) / 100)) L/100 km")
+                                        if distanceRan > 0 {
+                                            Text("\(consumedFuel / (Double(distanceRan) / 100)) L/100 km")
+                                        } else {
+                                            Text("–")
+                                        }
                                     }
                                     
                                     
@@ -217,7 +221,9 @@ struct ContentView: View {
                                                     Text("\(conso) L/100Km")
                                                     Spacer()
                                                 }
-                                                Text("\(fuel.eurosPerLiter) €/L")
+                                                if let eurosPerLiter = fuel.eurosPerLiter {
+                                                    Text("\(eurosPerLiter) €/L")
+                                                }
                                             }
                                             .font(.caption2)
                                             .foregroundStyle(.secondary)
@@ -323,7 +329,7 @@ struct ContentView: View {
             let full = fuel.full ? "true" : "false"
             let price = String(fuel.price)
             let quantity = String(fuel.quantity)
-            let epl = String(fuel.eurosPerLiter)
+            let epl = fuel.eurosPerLiter.map { String($0) } ?? ""
             fuelsCSV += "\(id),\(actionID),\(full),\(price),\(quantity),\(epl)\n"
         }
         
@@ -422,7 +428,7 @@ struct ContentView: View {
             let full: Bool
             let price: Double
             let quantity: Double
-            let eurosPerLiter: Double
+            let eurosPerLiter: Double?
         }
         struct ActionDTO: Codable {
             let timestamp: Date
@@ -571,10 +577,9 @@ extension Fuel {
             "\(quantity)L"
         }
     }
-    var eurosPerLiter: Double {
-        get {
-            return price / quantity
-        }
+    /// nil tant que la quantité n'est pas saisie (évite inf/NaN).
+    var eurosPerLiter: Double? {
+        quantity > 0 ? price / quantity : nil
     }
 }
 
@@ -634,8 +639,9 @@ enum eStat {
             let ordered = data.sorted(by: {$0 < $1})
             let count = data.count
             
-            let index = Int((Double(count) * percentage).rounded(.down))
-            
+            guard count > 0 else { return 0 }
+            let index = min(max(Int((Double(count) * percentage).rounded(.down)), 0), count - 1)
+
             return Double(ordered[index].double)
         }
     }
