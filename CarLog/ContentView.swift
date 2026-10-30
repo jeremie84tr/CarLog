@@ -113,7 +113,7 @@ struct ContentView: View {
                                     .frame(height: 150)
                                     
                                     LabeledContent("Prix moyen du carburant") {
-                                        Text("\(meanFuelPrice.shortNumber) €/L")
+                                        Text("\(meanFuelPrice.pricePerLiterString) €/L")
                                     }
                                 }
                                 
@@ -224,7 +224,7 @@ struct ContentView: View {
                                                     Spacer()
                                                 }
                                                 if let eurosPerLiter = fuel.eurosPerLiter {
-                                                    Text("\(eurosPerLiter.shortNumber) €/L")
+                                                    Text("\(eurosPerLiter.pricePerLiterString) €/L")
                                                 }
                                             }
                                             .font(.caption2)
@@ -654,6 +654,11 @@ extension Double {
     /// Nombre localisé avec 2 décimales maximum, pour l'affichage.
     var shortNumber: String {
         formatted(.number.precision(.fractionLength(0...2)))
+    }
+
+    /// Prix au litre : toujours 3 décimales (ex. 1,899).
+    var pricePerLiterString: String {
+        formatted(.number.precision(.fractionLength(3)))
     }
 }
 
