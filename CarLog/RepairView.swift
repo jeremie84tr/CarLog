@@ -15,7 +15,7 @@ struct RepairView: View {
     
     var body: some View {
         Section("Réparation") {
-            TextField("Forfait facturé", value: $repair.price, format: .currency(code: "EUR"))
+            TextField("Forfait facturé", value: $repair.price, format: .currency(code: appCurrencyCode))
             
             ForEach(sortedParts) { part in
                 PartView(part: part)

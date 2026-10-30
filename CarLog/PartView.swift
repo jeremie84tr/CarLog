@@ -13,16 +13,20 @@ struct PartView: View {
         
     var body: some View {
         VStack {
-            TextField("Name", text: $part.name)
+            TextField("Nom", text: $part.name)
             
-            TextField("Price", value: $part.price, format: .currency(code: "EUR"))
+            TextField("Prix", value: $part.price, format: .currency(code: appCurrencyCode))
                 .keyboardType(.numbersAndPunctuation)
         }
     }
 }
 
+/// Devise unique de l'app, partagée par les champs de saisie et l'affichage.
+let appCurrencyCode = "EUR"
+
 let moneyFormatter: NumberFormatter = {
     let formatter = NumberFormatter()
-    formatter.numberStyle = .currencyPlural
+    formatter.numberStyle = .currency
+    formatter.currencyCode = appCurrencyCode
     return formatter
 }()

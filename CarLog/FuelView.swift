@@ -17,7 +17,7 @@ struct FuelView: View {
                 .keyboardType(.numbersAndPunctuation)
             Toggle("Plein", isOn: $fuel.full)
             
-            TextField("Prix", value: $fuel.price, format: .currency(code: "EUR"))
+            TextField("Prix", value: $fuel.price, format: .currency(code: appCurrencyCode))
                 .keyboardType(.numbersAndPunctuation)
         }
     }

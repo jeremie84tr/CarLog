@@ -113,7 +113,7 @@ struct ContentView: View {
                                     .frame(height: 150)
                                     
                                     LabeledContent("Prix moyen du carburant") {
-                                        Text("\(meanFuelPrice) €/L")
+                                        Text("\(meanFuelPrice.shortNumber) €/L")
                                     }
                                 }
                                 
@@ -141,11 +141,11 @@ struct ContentView: View {
                                     .frame(height: 150)
                                     let consumedFuel = fuelActions.reduce(0, {$0 + $1.value.quantity})
                                     LabeledContent("Litres consommés") {
-                                        Text("\(consumedFuel)L")
+                                        Text("\(consumedFuel.shortNumber) L")
                                     }
                                     LabeledContent("Consommation moyenne globale") {
                                         if distanceRan > 0 {
-                                            Text("\(consumedFuel / (Double(distanceRan) / 100)) L/100 km")
+                                            Text("\((consumedFuel / (Double(distanceRan) / 100)).shortNumber) L/100 km")
                                         } else {
                                             Text("–")
                                         }
@@ -220,11 +220,11 @@ struct ContentView: View {
                                             }
                                             HStack {
                                                 if let conso = consumptions[action.objectID] {
-                                                    Text("\(conso) L/100Km")
+                                                    Text("\(conso.shortNumber) L/100 km")
                                                     Spacer()
                                                 }
                                                 if let eurosPerLiter = fuel.eurosPerLiter {
-                                                    Text("\(eurosPerLiter) €/L")
+                                                    Text("\(eurosPerLiter.shortNumber) €/L")
                                                 }
                                             }
                                             .font(.caption2)
@@ -622,7 +622,7 @@ extension Collection where Element == Action {
 extension Fuel {
     var quantityString: String {
         get {
-            "\(quantity)L"
+            "\(quantity.shortNumber) L"
         }
     }
     /// nil tant que la quantité n'est pas saisie (évite inf/NaN).
@@ -649,6 +649,13 @@ private let actionTimestampFormatter: DateFormatter = {
     
     return formatter
 }()
+
+extension Double {
+    /// Nombre localisé avec 2 décimales maximum, pour l'affichage.
+    var shortNumber: String {
+        formatted(.number.precision(.fractionLength(0...2)))
+    }
+}
 
 protocol ExpressibleAsDouble {
     var double: Double { get }

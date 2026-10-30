@@ -76,7 +76,7 @@ struct ActionView: View {
                 Picker("Type d'action", selection: $actionType) {
                     Text("Carburant")
                         .tag(eActionType.fuel)
-                    Text("Reparation")
+                    Text("Réparation")
                         .tag(eActionType.repair)
                 }
             }
@@ -102,7 +102,7 @@ struct ActionView: View {
                 }
                 ToolbarItem {
                     Button(action: addPart) {
-                        Label("Add Action", systemImage: "plus")
+                        Label("Ajouter une pièce", systemImage: "plus")
                     }
                 }
             }
