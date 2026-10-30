@@ -17,7 +17,18 @@ struct ActionView: View {
     
     init(action: Action) {
         self._action = .init(wrappedValue: action)
-        self.actionType = action.fuel != nil ? .fuel : .repair
+        // Une nouvelle action (ni fuel ni repair) est un plein par défaut.
+        self.actionType = action.repair != nil && action.fuel == nil ? .repair : .fuel
+    }
+
+    /// Crée le Fuel/Repair du type sélectionné s'il n'existe pas encore.
+    private func ensureObjectExists(for type: eActionType) {
+        switch type {
+        case .fuel:
+            if action.fuel == nil { action.fuel = Fuel(context: viewContext) }
+        case .repair:
+            if action.repair == nil { action.repair = Repair(context: viewContext) }
+        }
     }
     
     enum eActionType: Hashable {
@@ -74,24 +85,16 @@ struct ActionView: View {
             case .fuel:
                 if let fuel = action.fuel {
                     FuelView(fuel: fuel)
-                } else {
-                    Spacer()
-                        .onAppear {
-                            action.fuel = Fuel(context: viewContext)
-                        }
                 }
             case .repair:
                 if let repair = action.repair {
                     RepairView(repair: repair)
-                } else {
-                    Spacer()
-                        .onAppear {
-                            action.repair = Repair(context: viewContext)
-                        }
                 }
             }
-            
+
         }
+        .onAppear { ensureObjectExists(for: actionType) }
+        .onChange(of: actionType) { _, newType in ensureObjectExists(for: newType) }
         .toolbar {
             if action.repair != nil {
                 ToolbarItem(placement: .navigationBarTrailing) {
