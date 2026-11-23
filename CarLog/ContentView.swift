@@ -34,25 +34,28 @@ struct ContentView: View {
                         } label: {
                             ActionRow(action: action, consumption: consumptions[action.objectID])
                         }
+                        .contextMenu {
+                            Button("Supprimer", systemImage: "trash", role: .destructive) { delete(action) }
+                        }
                     }
                     .onDelete(perform: deleteActions)
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button(action: { export(ExportService.makeJSON) }) {
                         Label("Partager", systemImage: "square.and.arrow.up")
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                ToolbarItem(placement: .platformTrailing) {
+                    PlatformEditButton()
                 }
                 ToolbarItem {
                     Button(action: addAction) {
                         Label("Ajouter une action", systemImage: "plus")
                     }
                 }
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItem(placement: .platformBottom) {
                     Button(action: { export(ExportService.makeZip) }) {
                         Label("Exporter CSV (ZIP)", systemImage: "archivebox")
                     }
@@ -84,6 +87,13 @@ struct ContentView: View {
             newAction.timestamp = Date()
             newAction.mileage = actions.max(by: {$0.mileage < $1.mileage})?.mileage ?? 0
 
+            viewContext.saveLoggingErrors()
+        }
+    }
+
+    private func delete(_ action: Action) {
+        withAnimation {
+            viewContext.delete(action)
             viewContext.saveLoggingErrors()
         }
     }

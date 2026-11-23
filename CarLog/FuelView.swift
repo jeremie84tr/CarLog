@@ -14,11 +14,11 @@ struct FuelView: View {
     var body: some View {
         Section("Carburant") {
             TextField("Quantité", value: $fuel.quantity, format: .number.precision(.fractionLength(0...2)))
-                .keyboardType(.decimalPad)
+                .decimalKeyboard()
             Toggle("Plein", isOn: $fuel.full)
             
             TextField("Prix", value: $fuel.price, format: .currency(code: appCurrencyCode))
-                .keyboardType(.decimalPad)
+                .decimalKeyboard()
         }
     }
 }

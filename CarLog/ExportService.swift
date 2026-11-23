@@ -3,7 +3,6 @@
 //  CarLog
 //
 
-import UIKit
 import CoreData
 import ZIPFoundation
 
@@ -154,9 +153,7 @@ enum ExportService {
             
             // 6) Créer ZIP
             let zipURL = FileManager.default.temporaryDirectory.appendingPathComponent("CarLog_Export_\(ISO8601DateFormatter().string(from: .now)).zip")
-            guard let archive = Archive(url: zipURL, accessMode: .create) else {
-                throw ExportError("Impossible de créer l'archive ZIP.")
-            }
+            let archive = try Archive(url: zipURL, accessMode: .create)
             do {
                 let fileNames = ["index.json", "actions.csv", "fuels.csv", "repairs.csv", "parts.csv"]
                 for name in fileNames {
@@ -247,30 +244,5 @@ enum ExportService {
                 throw ExportError("Impossible d'écrire le fichier JSON : \(error.localizedDescription)")
             }
         return url
-    }
-}
-
-enum ShareSheet {
-    /// Présente la feuille de partage (avec ancrage popover pour iPad) et supprime les fichiers temporaires ensuite.
-    @MainActor
-    static func present(_ url: URL, cleaning cleanup: [URL]) throws {
-        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        activityVC.completionWithItemsHandler = { _, _, _, _ in
-            cleanup.forEach { try? FileManager.default.removeItem(at: $0) }
-        }
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.keyWindow?.rootViewController else {
-            cleanup.forEach { try? FileManager.default.removeItem(at: $0) }
-            throw ExportError("Impossible d'afficher la feuille de partage.")
-        }
-        // Remonte au contrôleur actuellement présenté pour éviter un conflit de présentation.
-        var presenter = root
-        while let presented = presenter.presentedViewController { presenter = presented }
-        if let popover = activityVC.popoverPresentationController {
-            popover.sourceView = presenter.view
-            popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.maxY - 1, width: 1, height: 1)
-            popover.permittedArrowDirections = []
-        }
-        presenter.present(activityVC, animated: true)
     }
 }

@@ -19,6 +19,9 @@ struct RepairView: View {
             
             ForEach(sortedParts) { part in
                 PartView(part: part)
+                    .contextMenu {
+                        Button("Supprimer", systemImage: "trash", role: .destructive) { delete(part) }
+                    }
             }
             .onDelete(perform: deleteParts)
         }
@@ -29,6 +32,13 @@ struct RepairView: View {
     private var sortedParts: [Part] {
         ((repair.parts?.allObjects as? [Part]) ?? []).sorted {
             $0.objectID.uriRepresentation().absoluteString < $1.objectID.uriRepresentation().absoluteString
+        }
+    }
+
+    private func delete(_ part: Part) {
+        withAnimation {
+            viewContext.delete(part)
+            viewContext.saveLoggingErrors()
         }
     }
 

@@ -61,6 +61,12 @@ struct PersistenceController {
 
     init(inMemory: Bool = false) {
         container = NSPersistentCloudKitContainer(name: "CarLog")
+        if let description = container.persistentStoreDescriptions.first {
+            description.cloudKitContainerOptions = inMemory ? nil
+                : NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.lohyer.carlog")
+            description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        }
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
         }

@@ -62,12 +62,7 @@ struct ActionView: View {
     var body: some View {
         List {
             Section("Action") {
-                Picker("Kilométrage", selection: $action.mileage) {
-                    ForEach(exponentialMileage, id:\.self) { km in
-                        Text("\(km) Km")
-                            .tag(km)
-                    }
-                }.pickerStyle(.wheel)
+                MileagePicker(title: "Kilométrage", value: $action.mileage, candidates: exponentialMileage)
                 TextField("Raison", text: $action.reason)
                 
                 DatePicker("Date", selection: $action.timestamp)
@@ -97,8 +92,8 @@ struct ActionView: View {
         .onChange(of: actionType) { _, newType in ensureObjectExists(for: newType) }
         .toolbar {
             if action.repair != nil {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                ToolbarItem(placement: .platformTrailing) {
+                    PlatformEditButton()
                 }
                 ToolbarItem {
                     Button(action: addPart) {

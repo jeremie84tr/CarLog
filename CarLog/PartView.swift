@@ -16,7 +16,7 @@ struct PartView: View {
             TextField("Nom", text: $part.name)
             
             TextField("Prix", value: $part.price, format: .currency(code: appCurrencyCode))
-                .keyboardType(.decimalPad)
+                .decimalKeyboard()
         }
     }
 }
